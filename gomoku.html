@@ -178,65 +178,6 @@
         .btn-undo:active { transform: translateY(0); }
         .btn-undo:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
-        /* ===== Undo Credits & Ad ===== */
-        .undo-meta {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 14px;
-            margin-top: 14px;
-            flex-wrap: wrap;
-        }
-
-        .undo-credits-display {
-            padding: 6px 16px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 20px;
-            color: #aaa;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .undo-credits-display .num {
-            font-weight: 700;
-            color: #f5af19;
-            font-size: 20px;
-            min-width: 22px;
-            text-align: center;
-        }
-        .undo-credits-display .max {
-            color: #666;
-            font-size: 13px;
-        }
-
-        .btn-ad {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            background: linear-gradient(135deg, #f5af19, #f12711);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-ad:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(241, 39, 17, 0.4);
-        }
-        .btn-ad:active { transform: translateY(0); }
-        .btn-ad:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
         /* ===== AI Thinking Animation ===== */
         .thinking-dots::after {
             content: '';
@@ -327,14 +268,6 @@
             <button class="btn-restart" id="restartBtn">🔄 重新开始</button>
             <button class="btn-undo" id="undoBtn" disabled>↩ 悔棋</button>
         </div>
-
-        <div class="undo-meta">
-            <span class="undo-credits-display">
-                🎫 悔棋券: <span class="num" id="undoCreditCount">3</span>
-                <span class="max">/ 5</span>
-            </span>
-            <button class="btn-ad" id="watchAdBtn">📺 看广告得悔棋券</button>
-        </div>
     </div>
 
     <script>
@@ -390,13 +323,6 @@
         let lastMovePos = null;
 
         // ======================================================================
-        //  UNDO CREDITS (看广告得悔棋)
-        // ======================================================================
-        const BASE_UNDO_CREDITS = 3;
-        const MAX_UNDO_CREDITS = 5;
-        let undoCredits = BASE_UNDO_CREDITS;
-
-        // ======================================================================
         //  AI SCORING CONSTANTS
         // ======================================================================
         const SCORE_FIVE           = 10000000;
@@ -425,8 +351,7 @@
             lastMovePos = null;
             hoverPos = null;
             isAIThinking = false;
-            undoCredits = BASE_UNDO_CREDITS;
-            updateUndoUI();
+            undoBtn.disabled = true;
             drawBoard();
             updateStatus();
             updateMoveCount();
@@ -724,7 +649,7 @@
         function triggerAIMove() {
             if (gameOver) return;
             isAIThinking = true;
-            updateUndoUI();
+            undoBtn.disabled = true;
             updateStatus();
 
             setTimeout(() => {
@@ -765,7 +690,7 @@
 
                 currentPlayer = BLACK;
                 isAIThinking = false;
-                updateUndoUI();
+                undoBtn.disabled = moveHistory.length < 2;
                 drawBoard();
                 updateStatus();
             }, 150);
@@ -1056,10 +981,7 @@
         //  UNDO
         // ======================================================================
         function undoMove() {
-            if (gameOver || isAIThinking || moveHistory.length < 2 || undoCredits <= 0) return;
-
-            // Consume one undo credit
-            undoCredits--;
+            if (gameOver || isAIThinking || moveHistory.length < 2) return;
 
             // Remove AI's last move and player's last move
             for (let i = 0; i < 2; i++) {
@@ -1077,68 +999,13 @@
             gameOver = false;
             winner = null;
 
-            updateUndoUI();
+            undoBtn.disabled = moveHistory.length < 2;
             drawBoard();
             updateStatus();
             updateMoveCount();
 
             // Re-enable if AI was thinking (shouldn't happen but safety)
             isAIThinking = false;
-        }
-
-        // ======================================================================
-        //  UNDO CREDIT & AD FUNCTIONS
-        // ======================================================================
-        function updateUndoUI() {
-            const canUndo = !gameOver && !isAIThinking && moveHistory.length >= 2 && undoCredits > 0;
-            undoBtn.disabled = !canUndo;
-            document.getElementById('undoCreditCount').textContent = undoCredits;
-            const adBtn = document.getElementById('watchAdBtn');
-            adBtn.disabled = undoCredits >= MAX_UNDO_CREDITS || gameOver || isAIThinking;
-        }
-
-        function watchAdForCredit() {
-            if (undoCredits >= MAX_UNDO_CREDITS || gameOver || isAIThinking) return;
-
-            const btn = document.getElementById('watchAdBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ 加载中...';
-            showToast('📺 正在加载广告...', '');
-
-            // ================================================================
-            //  🚀 接入真实广告 SDK 说明
-            //  ================================================================
-            //  推荐平台（支持 Web 激励视频 / Rewarded Ads）:
-            //    1. Adsterra  — https://adsterra.com  (有 Rewarded Video)
-            //    2. PropellerAds — https://propellerads.com (有 VAST Video)
-            //    3. Google AdMob — 需要封装成 Web 版本
-            //
-            //  接入方式:
-            //    在广告播放完成/奖励回调中调用 grantUndoCredit()
-            //    例如 Adsterra:
-            //      window.adsterra.rewarded.show({
-            //        onReward: () => { grantUndoCredit(); }
-            //      });
-            // ================================================================
-
-            // --- 模拟广告播放（替换为真实 SDK）---
-            setTimeout(() => {
-                // 模拟广告成功
-                grantUndoCredit();
-                btn.textContent = '📺 看广告得悔棋券';
-                btn.disabled = undoCredits >= MAX_UNDO_CREDITS;
-            }, 2500);
-        }
-
-        function grantUndoCredit() {
-            if (undoCredits < MAX_UNDO_CREDITS) {
-                undoCredits++;
-                updateUndoUI();
-                showToast('🎉 获得 1 次悔棋机会！', 'win');
-            } else {
-                showToast('📌 悔棋券已满（最多5张）', '');
-                document.getElementById('watchAdBtn').textContent = '📺 看广告得悔棋券';
-            }
         }
 
         // ======================================================================
@@ -1212,9 +1079,6 @@
         // Undo
         undoBtn.addEventListener('click', undoMove);
 
-        // Watch Ad
-        document.getElementById('watchAdBtn').addEventListener('click', watchAdForCredit);
-
         // ======================================================================
         //  KEYBOARD SHORTCUTS
         // ======================================================================
@@ -1226,6 +1090,11 @@
         // ======================================================================
         //  START THE GAME
         // ======================================================================
+        initGame();
+        updateScores();
+    </script>
+</body>
+</html>
         initGame();
         updateScores();
     </script>
