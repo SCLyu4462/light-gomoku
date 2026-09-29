@@ -2,6 +2,8 @@
 
 一个基于威胁评分算法的智能五子棋游戏，**单 HTML 文件**，浏览器打开即玩。
 
+**[▶ 在线试玩](https://sclyu4462.github.io/light-gomoku/)**（GitHub Pages）
+
 ## 快速开始
 
 ```bash
