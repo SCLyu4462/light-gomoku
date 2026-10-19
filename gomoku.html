@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能五子棋 - Gomoku</title>
+    <title>智能五子棋 · Gomoku</title>
+    <meta name="description" content="智能五子棋：15×15 棋盘、人机对战，AI 棋型打分与候选点筛选，含悔棋券机制，单文件 HTML/CSS/JS 实现。">
+    <link rel="canonical" href="https://heyuankugua.xyz/gomoku.html">
+    <link rel="icon" href="favicon.ico">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="苦瓜 · 个人博客">
+    <meta property="og:title" content="智能五子棋 · Gomoku">
+    <meta property="og:description" content="15×15 人机对战，AI 棋型打分，含悔棋券机制。">
+    <meta property="og:url" content="https://heyuankugua.xyz/gomoku.html">
+    <meta property="og:locale" content="zh_CN">
+    <meta name="twitter:card" content="summary">
     <style>
         /* ===== Reset & Base ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,6 +45,14 @@
 
         /* ===== Header ===== */
         header { margin-bottom: 20px; }
+        .home-link {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 10px; padding: 6px 14px;
+            border: 1px solid rgba(245, 175, 25, 0.35); border-radius: 999px;
+            color: #f5af19; text-decoration: none; font-size: 13px;
+            letter-spacing: 0.5px; transition: background 0.2s, border-color 0.2s;
+        }
+        .home-link:hover { background: rgba(245, 175, 25, 0.12); border-color: #f5af19; }
 
         h1 {
             font-size: 28px;
@@ -124,18 +143,20 @@
         /* ===== Board Container ===== */
         .board-wrapper {
             position: relative;
-            display: inline-block;
+            display: block;
+            width: min(100%, 552px);
+            aspect-ratio: 1 / 1;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            margin-bottom: 16px;
+            margin: 0 auto 16px;
             overflow: hidden;
         }
 
         #board {
             display: block;
+            width: 100%;
+            height: 100%;
             cursor: pointer;
-            max-width: 100%;
-            height: auto;
             background: #d4a96a;
             touch-action: none;
         }
@@ -177,6 +198,141 @@
         .btn-undo:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-2px); }
         .btn-undo:active { transform: translateY(0); }
         .btn-undo:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+        /* ===== Undo Credits & Ad ===== */
+        .undo-meta {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .undo-credits-display {
+            padding: 6px 16px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            color: #aaa;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .undo-credits-display .num {
+            font-weight: 700;
+            color: #f5af19;
+            font-size: 20px;
+            min-width: 22px;
+            text-align: center;
+        }
+        .undo-credits-display .max {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .btn-frog {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: linear-gradient(135deg, #7bd88f, #2f9e6f);
+            color: #0b1f16;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-frog:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(47, 158, 111, 0.4);
+        }
+        .btn-frog:active { transform: translateY(0); }
+        .btn-frog:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ===== 奶蛙大笑 ===== */
+        .frog-modal {
+            position: fixed; inset: 0; z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(6, 10, 20, 0.82);
+            backdrop-filter: blur(8px);
+            padding: 20px;
+        }
+        .frog-modal[hidden] { display: none; }
+        .frog-card {
+            width: min(360px, 86vw);
+            padding: 30px 24px 26px;
+            border-radius: 24px;
+            background: linear-gradient(160deg, #21324d, #111a2b);
+            border: 1px solid rgba(123, 216, 143, 0.45);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
+            text-align: center;
+            animation: frogCardIn 0.25s ease-out;
+        }
+        .frog-video-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+        }
+        .frog-video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .frog-sound {
+            position: absolute; right: 8px; bottom: 8px;
+            width: 40px; height: 40px;
+            border: none; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff; font-size: 15px; line-height: 1;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s;
+        }
+        .frog-sound:hover { background: rgba(0, 0, 0, 0.78); }
+        .frog-caption {
+            margin-top: 8px;
+            color: #9fb2c8;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        .frog-bar {
+            height: 6px;
+            margin-top: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .frog-bar span {
+            display: block;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #7bd88f, #f5af19);
+            border-radius: inherit;
+            transition: width 0.2s linear;
+        }
+        @keyframes frogCardIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .frog-card {
+                animation: none;
+            }
+        }
 
         /* ===== AI Thinking Animation ===== */
         .thinking-dots::after {
@@ -220,11 +376,18 @@
 
         /* ===== Responsive ===== */
         @media (max-width: 600px) {
-            .container { padding: 16px; }
+            body { padding: 10px; }
+            .container { padding: 14px; }
             h1 { font-size: 22px; }
-            .status-bar { flex-direction: column; gap: 4px; font-size: 14px; }
-            .controls button { padding: 8px 16px; font-size: 13px; }
-            .score-board { font-size: 12px; gap: 12px; }
+            .subtitle { font-size: 12px; letter-spacing: 3px; }
+            .home-link { margin-top: 6px; padding: 5px 12px; font-size: 12px; min-height: 44px; display: inline-flex; align-items: center; }
+            .status-bar { flex-direction: column; gap: 4px; font-size: 14px; padding: 10px 14px; }
+            .score-board { font-size: 12px; gap: 10px; margin-bottom: 12px; }
+            .controls { gap: 8px; }
+            .controls button { padding: 8px 14px; font-size: 13px; min-height: 44px; }
+            .undo-meta { gap: 8px; margin-top: 10px; }
+            .undo-credits-display { padding: 5px 12px; font-size: 13px; }
+            .btn-frog { padding: 7px 14px; font-size: 13px; min-height: 44px; }
         }
     </style>
 </head>
@@ -237,6 +400,7 @@
         <header>
             <h1>♟ 智能五子棋</h1>
             <div class="subtitle">GO-MOKU · AI</div>
+            <a class="home-link" href="index.html">← 返回首页</a>
         </header>
 
         <div class="status-bar">
@@ -267,6 +431,29 @@
         <div class="controls">
             <button class="btn-restart" id="restartBtn">🔄 重新开始</button>
             <button class="btn-undo" id="undoBtn" disabled>↩ 悔棋</button>
+        </div>
+
+        <div class="undo-meta">
+            <span class="undo-credits-display">
+                🎫 悔棋券: <span class="num" id="undoCreditCount">3</span>
+                <span class="max">/ 5</span>
+            </span>
+            <button class="btn-frog" id="watchFrogBtn">看奶蛙大笑得悔棋券</button>
+        </div>
+    </div>
+
+    <!-- 奶蛙大笑 -->
+    <div class="frog-modal" id="frogModal" hidden>
+        <div class="frog-card" role="dialog" aria-modal="true" aria-label="奶蛙大笑">
+            <div class="frog-video-wrap">
+                <video class="frog-video" id="frogVideo" poster="assets/naifrog-laugh-poster.jpg" playsinline preload="metadata" aria-label="奶蛙大笑视频">
+                    <source src="assets/naifrog-laugh.mp4" type="video/mp4">
+                    <source src="assets/naifrog-laugh.webm" type="video/webm">
+                </video>
+                <button class="frog-sound" id="frogSoundBtn" type="button" aria-label="切换声音">🔊</button>
+            </div>
+            <p class="frog-caption">奶蛙正在大笑…</p>
+            <div class="frog-bar"><span id="frogBar"></span></div>
         </div>
     </div>
 
@@ -323,6 +510,13 @@
         let lastMovePos = null;
 
         // ======================================================================
+        //  UNDO CREDITS (奶蛙大笑得悔棋)
+        // ======================================================================
+        const BASE_UNDO_CREDITS = 3;
+        const MAX_UNDO_CREDITS = 5;
+        let undoCredits = BASE_UNDO_CREDITS;
+
+        // ======================================================================
         //  AI SCORING CONSTANTS
         // ======================================================================
         const SCORE_FIVE           = 10000000;
@@ -351,7 +545,8 @@
             lastMovePos = null;
             hoverPos = null;
             isAIThinking = false;
-            undoBtn.disabled = true;
+            undoCredits = BASE_UNDO_CREDITS;
+            updateUndoUI();
             drawBoard();
             updateStatus();
             updateMoveCount();
@@ -366,8 +561,6 @@
             const h = BOARD_PX;
             canvas.width = w * dpr;
             canvas.height = h * dpr;
-            canvas.style.width = w + 'px';
-            canvas.style.height = h + 'px';
             ctx.scale(dpr, dpr);
 
             // --- Board background ---
@@ -649,7 +842,7 @@
         function triggerAIMove() {
             if (gameOver) return;
             isAIThinking = true;
-            undoBtn.disabled = true;
+            updateUndoUI();
             updateStatus();
 
             setTimeout(() => {
@@ -690,7 +883,7 @@
 
                 currentPlayer = BLACK;
                 isAIThinking = false;
-                undoBtn.disabled = moveHistory.length < 2;
+                updateUndoUI();
                 drawBoard();
                 updateStatus();
             }, 150);
@@ -981,7 +1174,10 @@
         //  UNDO
         // ======================================================================
         function undoMove() {
-            if (gameOver || isAIThinking || moveHistory.length < 2) return;
+            if (gameOver || isAIThinking || moveHistory.length < 2 || undoCredits <= 0) return;
+
+            // Consume one undo credit
+            undoCredits--;
 
             // Remove AI's last move and player's last move
             for (let i = 0; i < 2; i++) {
@@ -999,13 +1195,100 @@
             gameOver = false;
             winner = null;
 
-            undoBtn.disabled = moveHistory.length < 2;
+            updateUndoUI();
             drawBoard();
             updateStatus();
             updateMoveCount();
 
             // Re-enable if AI was thinking (shouldn't happen but safety)
             isAIThinking = false;
+        }
+
+        // ======================================================================
+        //  UNDO CREDIT & 奶蛙大笑
+        // ======================================================================
+        function updateUndoUI() {
+            const canUndo = !gameOver && !isAIThinking && moveHistory.length >= 2 && undoCredits > 0;
+            undoBtn.disabled = !canUndo;
+            document.getElementById('undoCreditCount').textContent = undoCredits;
+            const frogBtn = document.getElementById('watchFrogBtn');
+            frogBtn.disabled = undoCredits >= MAX_UNDO_CREDITS || gameOver || isAIThinking;
+        }
+
+        let frogFallbackTimer = null;
+
+        function updateFrogProgress() {
+            const video = document.getElementById('frogVideo');
+            const bar = document.getElementById('frogBar');
+            if (!video.duration || !isFinite(video.duration)) return;
+            bar.style.width = `${Math.min(100, (video.currentTime / video.duration) * 100)}%`;
+        }
+
+        function finishFrogLaugh() {
+            const modal = document.getElementById('frogModal');
+            if (modal.hidden) return;
+
+            clearTimeout(frogFallbackTimer);
+            const video = document.getElementById('frogVideo');
+            const btn = document.getElementById('watchFrogBtn');
+            video.pause();
+            modal.hidden = true;
+            document.body.style.overflow = '';
+            btn.textContent = '看奶蛙大笑得悔棋券';
+            grantUndoCredit();
+            btn.disabled = undoCredits >= MAX_UNDO_CREDITS || gameOver || isAIThinking;
+        }
+
+        function watchFrogLaugh() {
+            if (undoCredits >= MAX_UNDO_CREDITS || gameOver || isAIThinking) return;
+
+            const btn = document.getElementById('watchFrogBtn');
+            const modal = document.getElementById('frogModal');
+            const video = document.getElementById('frogVideo');
+            const bar = document.getElementById('frogBar');
+            const soundBtn = document.getElementById('frogSoundBtn');
+            if (!modal.hidden) return;
+
+            btn.disabled = true;
+            btn.textContent = '奶蛙准备中…';
+            modal.hidden = false;
+            document.body.style.overflow = 'hidden';
+
+            // 进度条与视频播放进度同步
+            bar.style.transition = 'none';
+            bar.style.width = '0%';
+            void bar.offsetWidth;
+            bar.style.transition = 'width 0.2s linear';
+
+            try { video.currentTime = 0; } catch { /* 元数据还没加载好 */ }
+            video.controls = false;
+            video.muted = false;
+            soundBtn.textContent = '🔊';
+
+            const playPromise = video.play();
+            if (playPromise && playPromise.catch) {
+                playPromise.catch(() => {
+                    // 浏览器拦截带声音的自动播放时，静音重试
+                    video.muted = true;
+                    soundBtn.textContent = '🔇';
+                    video.play().catch(() => { video.controls = true; });
+                });
+            }
+
+            // 兜底：视频异常时也不要把弹层卡死
+            clearTimeout(frogFallbackTimer);
+            frogFallbackTimer = setTimeout(finishFrogLaugh, 12000);
+        }
+
+        function grantUndoCredit() {
+            if (undoCredits < MAX_UNDO_CREDITS) {
+                undoCredits++;
+                updateUndoUI();
+                showToast('🎉 奶蛙大笑，送你 1 张悔棋券！', 'win');
+            } else {
+                showToast('📌 悔棋券已满（最多 5 张）', '');
+                document.getElementById('watchFrogBtn').textContent = '看奶蛙大笑得悔棋券';
+            }
         }
 
         // ======================================================================
@@ -1079,10 +1362,28 @@
         // Undo
         undoBtn.addEventListener('click', undoMove);
 
+        // 奶蛙大笑
+        document.getElementById('watchFrogBtn').addEventListener('click', watchFrogLaugh);
+        const frogVideoEl = document.getElementById('frogVideo');
+        frogVideoEl.addEventListener('timeupdate', updateFrogProgress);
+        frogVideoEl.addEventListener('ended', finishFrogLaugh);
+        frogVideoEl.addEventListener('error', () => {
+            if (!document.getElementById('frogModal').hidden) {
+                showToast('🐸 奶蛙视频加载失败', '');
+                finishFrogLaugh();
+            }
+        });
+        document.getElementById('frogSoundBtn').addEventListener('click', () => {
+            const video = document.getElementById('frogVideo');
+            video.muted = !video.muted;
+            document.getElementById('frogSoundBtn').textContent = video.muted ? '🔇' : '🔊';
+        });
+
         // ======================================================================
         //  KEYBOARD SHORTCUTS
         // ======================================================================
         document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('frogModal').hidden) return;
             if (e.key === 'r' || e.key === 'R') restartBtn.click();
             if (e.key === 'u' || e.key === 'U') undoBtn.click();
         });
@@ -1090,11 +1391,6 @@
         // ======================================================================
         //  START THE GAME
         // ======================================================================
-        initGame();
-        updateScores();
-    </script>
-</body>
-</html>
         initGame();
         updateScores();
     </script>
